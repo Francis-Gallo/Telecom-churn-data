@@ -1,136 +1,57 @@
-📊 Telecom Customer Churn Analysis & Segmentation
-
-This project analyzes customer churn in the telecom industry to identify key factors contributing to churn and to support data-driven retention strategies.
-The work combines data preprocessing, exploratory analysis, clustering, and visualization to extract actionable business insights.
-
-🎯 Problem Statement
-
-Customer churn is a critical challenge for telecom providers, directly impacting revenue and growth.
-The objective of this project is to:
-
-Understand why customers churn
-
-Identify high-risk customer segments
-
-Provide insights that can guide targeted retention strategies
-
-📂 Dataset Overview
-
-7,043 customer records
-
-Features include:
-
-Customer demographics
-
-Service usage and subscriptions
-
-Billing and contract information
-
-Churn label (Yes / No)
-
-Data Preparation
-
-Cleaned and validated raw data
-
-Handled missing and inconsistent values
-
-Transformed categorical variables
-
-Prepared datasets for analysis, clustering, and visualization
-
-📊 Exploratory Data Analysis
-
-Key churn trends were analyzed using visual and statistical techniques:
-
-Churn rate by contract type
-
-Relationship between monthly charges and churn
-
-Impact of tenure and demographics
-
-Service-level patterns influencing customer retention
-
-These insights highlighted strong correlations between short-term contracts, high billing amounts, and churn risk.
-
-🧠 Modeling & Segmentation
-🔹 K-Means Clustering
-
-Customer segmentation was performed to uncover distinct behavioral patterns:
-
-Grouped customers based on service usage and billing characteristics
-
-Identified high-risk churn segments
-
-Enabled interpretation of churn behavior beyond binary classification
-
-Clustering results support personalized retention strategies rather than one-size-fits-all approaches.
-
-📈 Key Findings
-
-Customers on month-to-month contracts exhibit significantly higher churn
-
-Higher monthly charges correlate strongly with churn probability
-
-Clustering reveals distinct customer segments with varying churn risk profiles
-
-Data-driven segmentation enables more targeted and cost-effective retention actions
-
-🛠️ Technologies Used
-
-Data Processing & Analysis
-
-Python
-
-Pandas
-
-PySpark
-
-SQL
-
-Visualization & Reporting
-
-Power BI
-
-Matplotlib / exploratory plots
-
-Techniques
-
-Data cleaning & preprocessing
-
-Exploratory Data Analysis (EDA)
-
-K-Means clustering
-
-Business-oriented insight generation
-
-🧪 What I Learned
-
-Translating raw customer data into actionable business insights
-
-Practical application of clustering for customer segmentation
-
-Combining SQL, Python, and BI tools in a single analytics workflow
-
-Communicating analytical results through dashboards and visual storytelling
-
-Understanding churn as both a technical and business problem
-
-🔮 Possible Improvements
-
-Supervised churn prediction models
-
-Feature importance analysis for churn drivers
-
-Time-based churn forecasting
-
-Deployment of dashboards for continuous monitoring
-
-🔗 Context
-
-This project complements my work in:
-
-Applied machine learning
-
-Data-driven decision support
-
-Customer analytics and segmentation
+# Telecom customer churn: EDA, SQL KPIs, Power BI and PySpark segmentation
+
+A coursework analytics project on the public **IBM Telco Customer Churn** dataset (7,043 customers). The goal is to
+understand who churns and why, using four tools: pandas preprocessing, Python visualizations, SQL KPIs with a Power
+BI dashboard, and k-means segmentation in PySpark.
+
+![Python](https://img.shields.io/badge/Python-pandas%20%7C%20seaborn-3776AB?logo=python&logoColor=white)
+![PySpark](https://img.shields.io/badge/PySpark-MLlib%20k--means-E25A1C?logo=apachespark&logoColor=white)
+![SQL](https://img.shields.io/badge/SQL-MySQL-4479A1?logo=mysql&logoColor=white)
+![Power BI](https://img.shields.io/badge/Power%20BI-F2C811?logo=powerbi&logoColor=black)
+
+## Workflow (files are numbered in order)
+
+| # | File | What it does |
+|---|---|---|
+| 1 | `1.data preprocess.ipynb` | Converts `TotalCharges` to numbers, drops the 11 rows where it is blank, encodes categories (binary + one-hot) → `processed_telco_customer_churn.csv` (7,032 × 32) |
+| 2 | `2.data_visualization_project.ipynb` | Plots churn by contract type, monthly charges, tenure, streaming TV, senior status, payment method and phone service |
+| 3 | `3.power bi project.pbix` | Power BI dashboard |
+| 4 | `4.sql.final.sql` | MySQL schema (demographics, services, contracts, central table) and KPI queries: churn rate, revenue, tenure, simple CLV, revenue lost |
+| 5 | `5.benchmark spark.ipynb` | PySpark k-means on `tenure`, `MonthlyCharges`, `TotalCharges`, with k = 2…9 compared by silhouette score and timing |
+
+Data: `telecom_churn_data - RAW.csv` (original) and `processed_telco_customer_churn.csv` (cleaned).
+
+## Key numbers (computed from `processed_telco_customer_churn.csv`)
+
+| | Churn rate | Customers |
+|---|---|---|
+| Overall | **26.6%** | 7,032 |
+| Month-to-month contract | **42.7%** | 3,875 |
+| One-year contract | 11.3% | 1,472 |
+| Two-year contract | 2.8% | 1,685 |
+
+- Correlation with churn: tenure −0.35, monthly charges +0.19, total charges −0.20.
+- Customers who leave do so early. Short tenure is the clearest single signal. Higher monthly charges are linked to
+  churn, but only moderately.
+
+## Known issues (to fix)
+
+- **The contract, streaming-TV and payment-method plots mislabel the baseline category.** They rebuild the category
+  with `idxmax` over the one-hot columns. When all of them are 0 (e.g. month-to-month), `idxmax` returns the first
+  column instead of NaN, so month-to-month customers are drawn as "One year". Use
+  `np.where(dummies.sum(axis=1) == 0, "Month-to-month", dummies.idxmax(axis=1))`.
+- **SQL churn rate:** `(COUNT(*) - SUM(Churn)) / COUNT(*)` is the *retention* rate. Churn rate is `SUM(Churn) / COUNT(*)`.
+  The "churn rate for fiber optic / one-year" queries divide by *all* customers, not by the customers in that segment.
+- **k-means runs on unscaled features.** `StandardScaler` writes `scaled_features`, but `KMeans` reads the default
+  `features` column, so `TotalCharges` dominates the clusters. Add `.setFeaturesCol("scaled_features")`. The printed
+  "Cost" values are silhouette scores (higher is better), not k-means cost.
+
+## What I learned
+
+- Contract type and tenure explain much more of churn than demographics do.
+- One question can be answered consistently across pandas, SQL, BI and Spark, as long as the definitions match
+  (see the churn-rate bug above).
+
+## Data source
+
+IBM sample dataset "Telco Customer Churn" (as distributed on Kaggle).
