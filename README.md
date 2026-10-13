@@ -34,23 +34,20 @@ Data: `telecom_churn_data - RAW.csv` (original) and `processed_telco_customer_ch
 - Customers who leave do so early. Short tenure is the clearest single signal. Higher monthly charges are linked to
   churn, but only moderately.
 
-## Known issues (to fix)
+## Metric definitions
 
-- **The contract, streaming-TV and payment-method plots mislabel the baseline category.** They rebuild the category
-  with `idxmax` over the one-hot columns. When all of them are 0 (e.g. month-to-month), `idxmax` returns the first
-  column instead of NaN, so month-to-month customers are drawn as "One year". Use
-  `np.where(dummies.sum(axis=1) == 0, "Month-to-month", dummies.idxmax(axis=1))`.
-- **SQL churn rate:** `(COUNT(*) - SUM(Churn)) / COUNT(*)` is the *retention* rate. Churn rate is `SUM(Churn) / COUNT(*)`.
-  The "churn rate for fiber optic / one-year" queries divide by *all* customers, not by the customers in that segment.
-- **k-means runs on unscaled features.** `StandardScaler` writes `scaled_features`, but `KMeans` reads the default
-  `features` column, so `TotalCharges` dominates the clusters. Add `.setFeaturesCol("scaled_features")`. The printed
-  "Cost" values are silhouette scores (higher is better), not k-means cost.
+- Churn rate is churned customers divided by the customers in that group (`SUM(Churn) / COUNT(*)`). The fiber-optic
+  and one-year SQL queries use the same definition, with that segment as the denominator.
+- The contract, streaming-TV, and payment-method charts map an all-zero one-hot row back to the dropped baseline:
+  month-to-month, no streaming TV, and bank transfer.
+- PySpark k-means clusters `scaled_features` (not the unscaled `features` vector). The k loop prints silhouette
+  score. Higher is better.
 
 ## What I learned
 
 - Contract type and tenure explain much more of churn than demographics do.
-- One question can be answered consistently across pandas, SQL, BI and Spark, as long as the definitions match
-  (see the churn-rate bug above).
+- The same churn definition has to be used in pandas, SQL, BI, and Spark: churned customers divided by the customers
+  in that group.
 
 ## Data source
 

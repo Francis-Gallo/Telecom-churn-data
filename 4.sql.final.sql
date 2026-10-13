@@ -108,8 +108,8 @@ select * from centraltable;
 SELECT COUNT(CustomerID) AS TotalCustomers 
 FROM CustomerDemographics;
 
-#chrun rate 
-SELECT (COUNT(*) - SUM(Churn)) / COUNT(*) * 100 AS ChurnRatePercentage
+# churn rate
+SELECT SUM(Churn) * 100.0 / COUNT(*) AS ChurnRatePercentage
 FROM centraltable;
 
 #Total monthly revenue 
@@ -147,18 +147,18 @@ FROM centraltable;
 
 -- Churn Rate by Service Type (Fiber Optic)
 SELECT 
-    (COUNT(*) * 100.0 / (SELECT COUNT(*) FROM centraltable)) AS ChurnRateForFiberOptic
+    (SUM(f.Churn) * 100.0 / COUNT(*)) AS ChurnRateForFiberOptic
 FROM centraltable f
 JOIN ServiceUsage s ON f.CustomerID = s.CustomerID
-WHERE s.InternetService_FiberOptic = 1 AND f.Churn = 1;
+WHERE s.InternetService_FiberOptic = 1;
 
 
 --  Churn Rate by Contract Type
 SELECT 
-    (COUNT(*) * 100.0 / (SELECT COUNT(*) FROM centraltable)) AS ChurnRateOneYear
+    (SUM(f.Churn) * 100.0 / COUNT(*)) AS ChurnRateOneYear
 FROM centraltable f
 JOIN ContractInformation c ON f.CustomerID = c.CustomerID
-WHERE c.Contract_OneYear = 1 AND f.Churn = 1;
+WHERE c.Contract_OneYear = 1;
 
 -- Revenue Lost Due to Churn
 SELECT 
